@@ -14,11 +14,20 @@ use std::path::Path;
 extern crate arrayref;
 
 fn main() -> Result<()> {
+    let args: Vec<String> = std::env::args().collect();
+
+    if args.len() != 4 || args[2] != "-f" {
+        println!("Usage: {} <-ac | -au | -wc | -wu> -f <filename>", args[0]);
+        return Ok(());
+    }
+
+    let filename = &args[3];
+
     // Read private keys from file
-    let private_keys_hex = read_private_keys_from_file("private_keys.txt")?;
+    let private_keys_hex = read_private_keys_from_file(filename)?;
 
     for key_hex in private_keys_hex {
-        let key_bytes = hex::decode(key_hex)?;
+        let key_bytes = hex::decode(&key_hex)?;
         let private_key = U256::from_be_bytes(*array_ref!(key_bytes, 0, 32));
 
         let (public_key_compressed, public_key_uncompressed, wif_compressed, wif_uncompressed) = generate_public_key(private_key);
@@ -27,11 +36,14 @@ fn main() -> Result<()> {
         let bitcoin_address_compressed = generate_bitcoin_address(&public_key_compressed);
         let bitcoin_address_uncompressed = generate_bitcoin_address(&public_key_uncompressed);
 
-        println!("Compressed Bitcoin Address: {}", bitcoin_address_compressed);
-        println!("WIF (Uncompressed): {}", wif_uncompressed);
-        println!("Uncompressed Bitcoin Address: {}", bitcoin_address_uncompressed);
-        println!("WIF (Compressed): {}\n", wif_compressed);
-        
+        match args[1].as_str() {
+            "-ac" => println!("{}", bitcoin_address_compressed),
+	    "-au" => println!("{}", bitcoin_address_uncompressed),
+	    "-wc" => println!("{}", wif_compressed),
+            "-wu" => println!("{}", wif_uncompressed),
+            _ => { println!("Usage: {} <-ac | -au | -wc | -wu> -f <filename>", args[0]);
+            return Ok(()); }
+        }
     }
 
     Ok(())
@@ -141,5 +153,5 @@ fn base58check_encode(data: &[u8]) -> String {
     payload.extend_from_slice(&checksum[..4]);
 
     // Step 4: Encode the payload with Base58
-    bs58::encode(payload).into_string()
+    payload.to_base58()
 }

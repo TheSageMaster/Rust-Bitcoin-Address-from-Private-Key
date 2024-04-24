@@ -35,7 +35,15 @@ To use the Bitcoin Address Generator, follow these steps:
 1. Ensure `private_keys.txt` is populated with your private keys.
 2. Compile and run the program:
 ```
-cargo run
+$ cargo build --release
+$ cd target/release/
+$ ./address
+Usage: address <-ac | -au | -wc | -wu> -f <filename>
+
+ac = BTC Address Compressed
+au = BTC Address Uncompressed
+wc = WIF Compressed
+wu = WIF Uncompressed
 ```
 
 # Dependencies
